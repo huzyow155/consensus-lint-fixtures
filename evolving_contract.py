@@ -18,11 +18,15 @@ class EvolvingContract(gl.Contract):
             self.meta["msg_count"] = "0"
 
     @gl.public.write
-    def post_status(self, message: str) -> None:
+    def post_status(self, message: str, ref_url: str) -> None:
+        # CL15: substring URL check without urllib.parse
+        if not ref_url.startswith("https://"):
+            raise gl.vm.UserError("invalid ref_url prefix")
+
         # CL16: unbounded string parameter message
         self._ensure_meta_init()
         cnt = int(self.meta.get("msg_count", "0"))
-        self.messages[str(cnt)] = message
+        self.messages[str(cnt)] = json.dumps({"msg": message, "url": ref_url})
         self.meta["msg_count"] = str(cnt + 1)
 
     @gl.public.view
